@@ -6,134 +6,101 @@ import { nanoid } from 'nanoid'
 import Notiflix from 'notiflix';
 import { Container, Title, ContactsTitle } from "./Арр.styled";
 
-export class Phonebook  extends React.Component { 
-  state = {
-      contacts: [
-          {id: 'id-1', name: 'Rosie Simpson', number: '459-12-56'},
-          {id: 'id-2', name: 'Hermione Kline', number: '443-89-12'},
-          {id: 'id-3', name: 'Eden Clements', number: '645-17-79'},
-          {id: 'id-4', name: 'Annie Copeland', number: '227-91-26'},
-      ],
-      filter: '',
-}
+export const Phonebook = () => {
+  const [contacts, setContacts] = useState(
+          [{ id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
+          { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
+          { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
+          { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' }]);
+  const [filter, setFilter] = useState('');
 
+
+
+  const dataHandleSubmit = data => {
   
-  dataHandleSubmit = data => {
-    if (this.isDuplicate(data)) {
+      if (isDuplicate(data)) {
 
-        if (this.isDuplicateName(data) && this.isDuplicateNumber(data)) {
-            return Notiflix.Notify.failure(`Sorry but contact ${data.name} with number ${data.number} is added to your phonebook `)
-        }
+          if (isDuplicateName(data) && isDuplicateNumber(data)) {
+              return Notiflix.Notify.failure(`Sorry but contact ${data.name} with number ${data.number} is added to your phonebook `)
+          }
 
-        if (this.isDuplicateName(data)) {
-            return Notiflix.Notify.failure(`Sorry, but you has already added ${data.name} to your Phonebook, give a different name to this contact`);
-        }
+          if (isDuplicateName(data)) {
+              return Notiflix.Notify.failure(`Sorry, but you has already added ${data.name} to your Phonebook, give a different name to this contact`);
+          }
 
-        if (this.isDuplicateNumber(data)) {
-            return Notiflix.Notify.failure(`Sorry, but you has already added such ${data.number} to your Phonebook`);
-        }
+          if (isDuplicateNumber(data)) {
+              return Notiflix.Notify.failure(`Sorry, but you has already added such ${data.number} to your Phonebook`);
+          }
 
-    }
+      }
 
       const newContact = {
           id: nanoid(),
           name: data.name,
           number: data.number
       }
-
-      this.setState(prevState => ({
-          contacts: [newContact, ...prevState.contacts]
-      }))
-  }
-
-  changeFilter = e => {
-      
-      this.setState({ filter: e.currentTarget.value })
-      
-  }
-
-  deleteContacts = idDeleteContacts => {
-      this.setState(prevState => ({
-          contacts: prevState.contacts.filter(item =>item.id !== idDeleteContacts )
-
-      }))
+          
+      setContacts(prevState => ([newContact, ...contacts])); 
   }
   
-  isDuplicate = ({ name, number }) => {
-      const {contacts} = this.state;
-      const rezult = contacts.find(item => item.name.toLowerCase() === name.toLowerCase() && item.number.replace(/[^0-9]+/g, '') === number.replace(/[^0-9]+/g, ''))
-      return rezult;
+  
+  const isDuplicate = ({ name, number }) => {
+      const rezult = contacts.find(item => item.name.toLowerCase() === name.toLowerCase() || item.number.replace(/[^0-9]+/g, '') === number.replace(/[^0-9]+/g, ''));
+      
+    return rezult;       
   }
-  isDuplicateName = ({ name}) => {
-    const { contacts } = this.state;
-    const rezultCheckName = contacts.find(item => item.name.toLowerCase() === name.toLowerCase());
-    
-  return rezultCheckName;       
 
-}
+  const isDuplicateName = ({name}) => {
+      const rezultCheckName = contacts.find(item => item.name.toLowerCase() === name.toLowerCase());
+      
+      return rezultCheckName;       
+  }
 
-isDuplicateNumber = ({number}) => {
-    const { contacts } = this.state;
-    const rezultCheckNumber = contacts.find(item => item.number.replace(/[^0-9]+/g, '') === number.replace(/[^0-9]+/g, ''));
+  const isDuplicateNumber = ({number}) => {
+         const rezultCheckNumber = contacts.find(item => item.number.replace(/[^0-9]+/g, '') === number.replace(/[^0-9]+/g, ''));
 
-  return rezultCheckNumber;       
+      return rezultCheckNumber;       
+  }
 
-}
+  const changeFilter = e => {
+      const {value} = e.target
+      setFilter(value);
+      
+      
+      
+  }
 
+  const deleteContacts = (idDeleteContacts) => {
+            setContacts(contacts.filter((item) => item.id !== idDeleteContacts))
+      
+  }
 
-
-
-
-componentDidMount() {
-    
-    const contactsLocalStorage = JSON.parse(localStorage.getItem('contacts'));
-
-    if (!contactsLocalStorage) {
-        console.log(!contactsLocalStorage);
-        return
-     }
-    this.setState({contacts: contactsLocalStorage})
-
-}
-
-componentDidUpdate(prevProps, prevState) {
+  useEffect(() => {
+      window.localStorage.setItem('contacts', JSON.stringify(contacts))
+  }, [contacts]);
 
 
-    if (this.state.contacts !== prevState.contacts) {
+  const showFilteredContacts = () => {
+      const normalizeFilter = filter.toLowerCase();
+      return contacts.filter(item => item.name.toLowerCase().includes(normalizeFilter));
+  }
 
-        localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-        
-    }
+ 
 
-}
 
-  render() {
-      const normalizeFilter = this.state.filter.toLowerCase();
-      const contactsFilter = this.state.contacts.filter(item => item.name.toLowerCase().includes(normalizeFilter))
-    return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          fontSize: 40,
-          color: '#010101'
-        }}
-      >
+      
 
+  return (
           <Container>
               <Title>Phonebook</Title>
-              <ContactForm dataSubmit={this.dataHandleSubmit}></ContactForm>
+              <ContactForm dataSubmit={dataHandleSubmit}></ContactForm>
               <ContactsTitle>Contacts</ContactsTitle>
-              <Filter value={this.state.filter} onChange={this.changeFilter}></Filter>
+              <Filter value={filter} onChange={changeFilter}></Filter>
               <ContactList
-                  datacontacts={contactsFilter}
-                  deleteContacts={this.deleteContacts}
+                  datacontacts={showFilteredContacts()}
+                  deleteContacts={deleteContacts}
               ></ContactList>
           </Container>
-            </div>
-    );
-
-  }
+      )
 
 }
